@@ -6,13 +6,7 @@ import openpyxl
 import pandas as pd
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QGridLayout, QFileDialog, QLabel
 from openpyxl.utils.dataframe import dataframe_to_rows
-from openpyxl.styles import Font
-from openpyxl.descriptors import (
-    String,
-    Sequence,
-    Integer,
-)
-from openpyxl.descriptors.serialisable import Serialisable
+from openpyxl.styles import Font, Alignment, Border, Side
 
 BUILTIN_FORMATS = {
     0: 'General',
@@ -154,19 +148,24 @@ class QtGUI(QWidget):
                 ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월']].sum(axis=1)
             self.df_result['대비'] = self.df_result['사기성총액'] - self.df_result['지불소계']
             self.df_result['비고(업체정보)'] = self.df_result[(self.df_result['비고(업체정보)'] == 0)] = '-'
+            self.df_result = self.df_result.sort_values(by='상호')
+            self.df_result = self.df_result.reset_index()
+            self.df_result = self.df_result.drop(['index'], axis=1)
 
             ws = self.wb.create_sheet(str(year) + '_지불집계표')
             for r in dataframe_to_rows(self.df_result, index=True, header=True):
                 print(r)
                 ws.append(r)
             # ws.delete_rows(2)
-            for num in range(1, 30):
+            row_count = self.df_result['1월'].count() + 2
+            print(row_count)
+            for num in range(1, 21):
                 ws.cell(1, num).font = Font(bold=True)
 
             ws['B2'].value = "합계"
             ws['T2'].value = "-"
             ws.merge_cells("B2:D2")
-            for num in range(1, 30):
+            for num in range(1, 21):
                 ws.cell(2, num).font = Font(bold=True)
 
             ws['E2'] = '=SUM(E3:E1000)'
@@ -206,14 +205,47 @@ class QtGUI(QWidget):
             ws.column_dimensions['T'].width = 14
 
             # 데이터 서식
-            for rng in ws['E2':'S100']:
+            for rng in ws['E2':'S'+str(row_count)]:
                 for cell in rng:
                     cell.number_format = '#,##0'
 
-            # 가운데 정렬
+            # 가운데
+            ws['B1'].alignment = Alignment(horizontal='center', vertical='center')
+            ws['B2'].alignment = Alignment(horizontal='center', vertical='center')
+            ws['C1'].alignment = Alignment(horizontal='center', vertical='center')
+            ws['D1'].alignment = Alignment(horizontal='center', vertical='center')
+            ws['E1'].alignment = Alignment(horizontal='center', vertical='center')
+            ws['F1'].alignment = Alignment(horizontal='center', vertical='center')
+            ws['G1'].alignment = Alignment(horizontal='center', vertical='center')
+            ws['H1'].alignment = Alignment(horizontal='center', vertical='center')
+            ws['I1'].alignment = Alignment(horizontal='center', vertical='center')
+            ws['J1'].alignment = Alignment(horizontal='center', vertical='center')
+            ws['K1'].alignment = Alignment(horizontal='center', vertical='center')
+            ws['L1'].alignment = Alignment(horizontal='center', vertical='center')
+            ws['M1'].alignment = Alignment(horizontal='center', vertical='center')
+            ws['N1'].alignment = Alignment(horizontal='center', vertical='center')
+            ws['O1'].alignment = Alignment(horizontal='center', vertical='center')
+            ws['P1'].alignment = Alignment(horizontal='center', vertical='center')
+            ws['Q1'].alignment = Alignment(horizontal='center', vertical='center')
+            ws['R1'].alignment = Alignment(horizontal='center', vertical='center')
+            ws['S1'].alignment = Alignment(horizontal='center', vertical='center')
+            ws['T1'].alignment = Alignment(horizontal='center', vertical='center')
 
 
             # 표 선그리기
+            thin_border = Border(left=Side(style='thin',color='123456'),
+                                 right=Side(style='thin',color='123456'),
+                                 top=Side(style='thin',color='123456'),
+                                 bottom=Side(style='thin',color='123456'))
+
+            medium_border = Border(left=Side(style='medium', color='123456'),
+                                 right=Side(style='medium', color='123456'),
+                                 top=Side(style='medium', color='123456'),
+                                 bottom=Side(style='medium', color='123456'))
+
+            for rng in ws['A1':'T'+str(row_count)]:
+                for cell in rng:
+                    cell.border = thin_border
 
 
         self.wb.save(self.FileOpen[0].split('.')[0] + "_집계_"+datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')+".xlsx")
